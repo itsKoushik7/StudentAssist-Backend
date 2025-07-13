@@ -66,18 +66,6 @@ const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
 const { formatAnswerForPDF } = require("../cleanText");
-
-// function formatAnswerForPDF(text) {
-//   return text
-//     .replace(/\*\*(.*?)\*\*/g, "$1") // Remove markdown bold
-//     .replace(/[^\x20-\x7E\n\r]/g, "") // Remove junk characters
-//     .replace(/```(.*?)```/gs, "\n$1\n") // Format code blocks
-//     .replace(/(\r?\n){2,}/g, "\n\n") // Collapse multiple line breaks
-//     .replace(/^\s*-\s+/gm, "• ") // Convert markdown bullets
-//     .replace(/(\d+)\.\s+/g, "$1. ") // Numbered list cleanup
-//     .trim();
-// }
-
 async function generateQAPdfFile({ questions, subject_code, getAnswer }) {
   if (typeof getAnswer !== "function") {
     throw new Error("getAnswer must be a valid function");
