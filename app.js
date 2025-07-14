@@ -7,6 +7,7 @@ const { verifyToken } = require("./middleware/authMiddleware");
 const userRoutes = require("./routes/user.routes");
 const paperRoutes = require("./routes/paper.routes");
 const qaRoutes = require("./routes/qa.routes");
+const subjectRoutes = require("./routes/subject.routes");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/papers", paperRoutes);
 app.use("/api/qa", qaRoutes);
 app.use("/api", require("./routes/collegeRoutes"));
+app.use("/api/subjects", subjectRoutes);
 // app.use("/api/qa", qaRoutes);
 // router.post("/login", loginUser);
 
