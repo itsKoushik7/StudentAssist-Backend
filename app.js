@@ -16,9 +16,9 @@ app.use(bodyParser.json());
 app.use("/api/users", userRoutes);
 app.use("/api/papers", paperRoutes);
 app.use("/api/qa", qaRoutes);
+app.use("/api", require("./routes/collegeRoutes"));
 // app.use("/api/qa", qaRoutes);
 // router.post("/login", loginUser);
-// router.get("/me", verifyToken, getUserProfile);
 
 app.get("/", (req, res) => {
   res.send("Student Assist API is running...");

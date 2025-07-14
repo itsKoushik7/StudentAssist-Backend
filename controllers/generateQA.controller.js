@@ -92,7 +92,7 @@ const { getAnswerFromGroq } = require("../utils/getAnswerFromGroq");
 const { generateQAPdfFile } = require("../utils/pdf/generateQA");
 
 exports.generateQAPdf = async (req, res) => {
-  const { subject_code } = req.query;
+  const { subject_code, unit } = req.query;
 
   if (!subject_code) {
     return res.status(400).json({ message: "subject_code is required" });
@@ -101,8 +101,8 @@ exports.generateQAPdf = async (req, res) => {
   try {
     // Step 1: Fetch questions
     const [questions] = await pool.query(
-      `SELECT question_text FROM questions WHERE subject_code = ?`,
-      [subject_code]
+      `SELECT question_text FROM questions WHERE subject_code = ? and detected_unit = ?`,
+      [subject_code, unit]
     );
 
     if (!questions.length) {

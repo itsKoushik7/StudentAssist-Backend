@@ -9,5 +9,6 @@ router.post("/login", userController.loginUser);
 router.get("/me", verifyToken, (req, res) => {
   res.json({ message: "Protected route accessed", user: req.user });
 });
+router.get("/about", verifyToken, userController.getUserProfile);
 
 module.exports = router;
