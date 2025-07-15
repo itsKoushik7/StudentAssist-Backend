@@ -11,7 +11,14 @@ const subjectRoutes = require("./routes/subject.routes");
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "*", // Vercel domain for production, * for dev
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
 app.use(bodyParser.json());
 
 app.use("/api/users", userRoutes);

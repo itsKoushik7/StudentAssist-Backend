@@ -1,8 +1,8 @@
 const natural = require("natural");
 const sw = require("stopword");
 
-console.log("sw object:", sw);
-console.log("sw.englishStopwords:", sw.englishStopwords);
+// console.log("sw object:", sw);
+// console.log("sw.englishStopwords:", sw.englishStopwords);
 
 const tokenizer = new natural.WordTokenizer();
 const stemmer = natural.PorterStemmer;
