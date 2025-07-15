@@ -72,21 +72,60 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+// exports.loginUser = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   try {
+//     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
+//       email,
+//     ]);
+
+//     if (!rows.length)
+//       return res.status(404).json({ message: "User not found" });
+
+//     const user = rows[0];
+//     const isMatch = await bcrypt.compare(password, user.password_hash);
+//     if (!isMatch)
+//       return res.status(401).json({ message: "Invalid credentials" });
+
+//     const token = jwt.sign(
+//       { id: user.id, email: user.email },
+//       process.env.JWT_SECRET,
+//       { expiresIn: process.env.JWT_EXPIRES_IN }
+//     );
+
+//     res.json({
+//       token,
+//       user: { id: user.id, name: user.name, email: user.email },
+//     });
+//   } catch (err) {
+//     console.error("Login error:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };
+
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
+  console.log("🔐 Login attempt received for email:", email);
 
   try {
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
       email,
     ]);
 
-    if (!rows.length)
+    console.log("🧑 User lookup result:", rows);
+
+    if (!rows.length) {
+      console.warn("❌ User not found for email:", email);
       return res.status(404).json({ message: "User not found" });
+    }
 
     const user = rows[0];
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch)
+    if (!isMatch) {
+      console.warn("⚠️ Invalid password for user:", email);
       return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
@@ -94,12 +133,14 @@ exports.loginUser = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
+    console.log("✅ Login successful. Token generated for:", email);
+
     res.json({
       token,
       user: { id: user.id, name: user.name, email: user.email },
     });
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("❌ Login error:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
