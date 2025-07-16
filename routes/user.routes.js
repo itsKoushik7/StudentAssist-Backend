@@ -1,14 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../controllers/user.controller");
-const { verifyToken } = require("../middleware/authMiddleware");
+const {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  verifyOtp,
+} = require("../controllers/user.controller");
 
-router.post("/register", userController.registerUser);
-router.post("/login", userController.loginUser);
+const { verifyToken } = require("../middleware/authMiddleware");
+router.post("/auth/verify", verifyOtp);
+router.post("/register", registerUser);
+router.post("/login", loginUser);
 
 router.get("/me", verifyToken, (req, res) => {
   res.json({ message: "Protected route accessed", user: req.user });
 });
-router.get("/about", verifyToken, userController.getUserProfile);
+router.get("/about", verifyToken, getUserProfile);
 
 module.exports = router;

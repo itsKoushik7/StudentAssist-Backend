@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 app.use("/api/users", userRoutes);
 app.use("/api/papers", paperRoutes);
 app.use("/api/qa", qaRoutes);
-app.use("/api", require("./routes/collegeRoutes"));
+app.use("/api/colleges", require("./routes/collegeRoutes"));
 app.use("/api/subjects", subjectRoutes);
 // app.use("/api/qa", qaRoutes);
 // router.post("/login", loginUser);

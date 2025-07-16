@@ -3,45 +3,27 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
-// exports.registerUser = async (req, res) => {
-//   const { name, email, password, college_name, branch, year } = req.body;
+const dayjs = require("dayjs");
+const { sendOtpEmail, sendWelcomeEmail } = require("../services/emailService");
+require("dotenv").config();
 
-//   try {
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const [collegeRows] = await pool.query(
-//       "SELECT id FROM colleges WHERE college_name = ?",
-//       [college_name]
-//     );
-
-//     let collegeId = collegeRows.length
-//       ? collegeRows[0].id
-//       : (
-//           await pool.query("INSERT INTO colleges (college_name) VALUES (?)", [
-//             college_name,
-//           ])
-//         )[0].insertId;
-
-//     await pool.query(
-//       "INSERT INTO users (name, email, password_hash, college_id, branch, year) VALUES (?, ?, ?, ?, ?, ?)",
-//       [name, email, hashedPassword, collegeId, branch, year]
-//     );
-
-//     res.status(201).json({ message: "User registered successfully" });
-//   } catch (err) {
-//     console.error("Register error:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
-
+// Step 1: Register + Send OTP (Save in pending_users)
 exports.registerUser = async (req, res) => {
   const { name, email, password, college_display_code, branch, year } =
     req.body;
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const [existing] = await pool.query("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
+    if (existing.length > 0)
+      return res.status(400).json({ message: "User already exists" });
 
-    // Step 1: Get college ID using display_code
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = dayjs().add(5, "minute").format("YYYY-MM-DD HH:mm:ss");
+
+    // Get college ID
     const [collegeRows] = await pool.query(
       "SELECT id FROM colleges WHERE display_code = ?",
       [college_display_code]
@@ -53,56 +35,65 @@ exports.registerUser = async (req, res) => {
 
     const collegeId = collegeRows[0].id;
 
-    // Step 2: Insert new user
+    // Insert or update pending user
     await pool.query(
-      `INSERT INTO users (name, email, password_hash, college_id, branch, year)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [name, email, hashedPassword, collegeId, branch, year]
+      `REPLACE INTO pending_users (name, email, password_hash, otp_code, otp_expires_at, college_id, branch, year)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, email, hashedPassword, otp, expiresAt, collegeId, branch, year]
     );
 
-    // Step 3: Update has_students = 1 for that college
+    await sendOtpEmail(email, otp);
+    res.status(200).json({ message: "OTP sent to email. Please verify." });
+  } catch (err) {
+    console.error("Register error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// Step 2: Verify OTP & Create user
+exports.verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const [pending] = await pool.query(
+      "SELECT * FROM pending_users WHERE email = ? AND  otp_code = ?",
+      [email, otp]
+    );
+
+    if (pending.length === 0)
+      return res.status(400).json({ message: "Invalid OTP" });
+
+    const record = pending[0];
+    if (new Date(record.expires_at) < new Date()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, college_id, branch, year)
+   VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        record.name,
+        record.email,
+        record.password_hash,
+        record.college_id,
+        record.branch,
+        record.year,
+      ]
+    );
+
+    await pool.query("DELETE FROM pending_users WHERE email = ?", [email]);
+    await sendWelcomeEmail(email, record.name);
+
     await pool.query("UPDATE colleges SET has_students = 1 WHERE id = ?", [
-      collegeId,
+      record.college_id,
     ]);
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
-    console.error("Register error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("OTP verification error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
-// exports.loginUser = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
-//       email,
-//     ]);
-
-//     if (!rows.length)
-//       return res.status(404).json({ message: "User not found" });
-
-//     const user = rows[0];
-//     const isMatch = await bcrypt.compare(password, user.password_hash);
-//     if (!isMatch)
-//       return res.status(401).json({ message: "Invalid credentials" });
-
-//     const token = jwt.sign(
-//       { id: user.id, email: user.email },
-//       process.env.JWT_SECRET,
-//       { expiresIn: process.env.JWT_EXPIRES_IN }
-//     );
-
-//     res.json({
-//       token,
-//       user: { id: user.id, name: user.name, email: user.email },
-//     });
-//   } catch (err) {
-//     console.error("Login error:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -112,8 +103,6 @@ exports.loginUser = async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
       email,
     ]);
-
-    console.log("🧑 User lookup result:", rows);
 
     if (!rows.length) {
       console.warn("❌ User not found for email:", email);

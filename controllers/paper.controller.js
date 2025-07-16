@@ -846,8 +846,12 @@ const extractQuestions = (text) => {
         /[\?\.:]$/.test(cleaned) ||
         cleaned.length > 30;
 
+      // const skipNonQuestion =
+      //   /(common to|part\s?[ab]|note:|instructions?|marks|sub questions|semester|year|university|b\.\s?tech)/i.test(
+      //     cleaned
+      //   );
       const skipNonQuestion =
-        /(common to|part\s?[ab]|note:|instructions?|marks|sub questions|semester|year|university|b\.\s?tech)/i.test(
+        /(common to|part\s?[ab]|note:|instructions?|marks|sub questions|semester|year|university|b\.?\s?tech|code no:|time:|max\.? marks|[a-z]{2,}\s*\(?cse|ece|eee|civil|mechanical|it|ai&ml|aiml|csm|ds\)?)/i.test(
           cleaned
         );
 
@@ -896,6 +900,14 @@ exports.uploadPaper = async (req, res) => {
   const userId = req.user.id;
   const { subject_code, year, month } = req.body;
   const file = req.file;
+  const mathSubjects = ["MA101BS", "MA201BS", "CS303PC", "CS401PC", "CS741PE"];
+  if (mathSubjects.includes(subject_code.toUpperCase())) {
+    return res.status(200).json({
+      message: "⏭️ Math subject skipped intentionally",
+      inserted: 0,
+      repeated: 0,
+    });
+  }
 
   if (!file || !subject_code || !year || !month) {
     return res.status(400).json({ message: "Missing required data or file" });
@@ -958,6 +970,7 @@ exports.uploadPaper = async (req, res) => {
       }
 
       unit = parseInt(unit);
+      if (isNaN(unit)) continue;
       if (isNaN(unit)) unit = null;
 
       const answerType = detectAnswerType(questionText);
