@@ -8,6 +8,7 @@ const userRoutes = require("./routes/user.routes");
 const paperRoutes = require("./routes/paper.routes");
 const qaRoutes = require("./routes/qa.routes");
 const subjectRoutes = require("./routes/subject.routes");
+const resumeRoutes = require("./routes/resumeRoutes");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/papers", paperRoutes);
 app.use("/api/qa", qaRoutes);
 app.use("/api/colleges", require("./routes/collegeRoutes"));
 app.use("/api/subjects", subjectRoutes);
+app.use("/api/resume", resumeRoutes);
 // app.use("/api/qa", qaRoutes);
 // router.post("/login", loginUser);
 
