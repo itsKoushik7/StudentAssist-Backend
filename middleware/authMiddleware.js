@@ -18,3 +18,10 @@ const verifyToken = (req, res, next) => {
 };
 
 module.exports = { verifyToken };
+
+exports.isAdmin = (req, res, next) => {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+  next();
+};
