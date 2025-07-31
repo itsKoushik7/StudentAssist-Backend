@@ -88,6 +88,24 @@ exports.createModernResume = async (data) => {
   }
 
   // Education
+  // if (data.education && data.education.length > 0) {
+  //   drawSectionHeader("Education");
+  //   data.education.forEach((edu) => {
+  //     doc
+  //       .fontSize(10)
+  //       .font("Helvetica-Bold")
+  //       .text(`${edu.school} (${edu.year})`);
+  //     doc.font("Helvetica").text(edu.degree);
+  //     if (edu.cgpa || edu.percentage) {
+  //       doc
+  //         .fontSize(9)
+  //         .text(
+  //           `${edu.cgpa.length() > 0 }  CGPA: ${edu.cgpa || "-"} | Percentage: ${edu.percentage || "-"}`
+  //         );
+  //     }
+  //     doc.moveDown(0.5);
+  //   });
+  // }
   if (data.education && data.education.length > 0) {
     drawSectionHeader("Education");
     data.education.forEach((edu) => {
@@ -95,41 +113,33 @@ exports.createModernResume = async (data) => {
         .fontSize(10)
         .font("Helvetica-Bold")
         .text(`${edu.school} (${edu.year})`);
+
       doc.font("Helvetica").text(edu.degree);
-      if (edu.cgpa || edu.percentage) {
-        doc
-          .fontSize(9)
-          .text(
-            `CGPA: ${edu.cgpa || "-"} | Percentage: ${edu.percentage || "-"}`
-          );
+
+      // Only print CGPA / Percentage if at least one is present and non-empty
+      const parts = [];
+      if (edu.cgpa && edu.cgpa.trim().length > 0) {
+        parts.push(`CGPA: ${edu.cgpa}`);
       }
+      if (edu.percentage && edu.percentage.trim().length > 0) {
+        parts.push(`Percentage: ${edu.percentage}`);
+      }
+
+      if (parts.length > 0) {
+        doc.fontSize(9).text(parts.join(" | "));
+      }
+
       doc.moveDown(0.5);
     });
   }
 
   // Experience
-  //   const validExperience = data.experience?.filter(
-  //     (exp) => exp.company || exp.role || exp.duration || exp.description
-  //   );
 
-  //   if (validExperience && validExperience.length > 0) {
-  //     drawSectionHeader("Professional Experience");
-  //     validExperience.forEach((exp) => {
-  //       doc
-  //         .fontSize(10)
-  //         .font("Helvetica-Bold")
-  //         .text(`${exp.role} at ${exp.company}`);
-  //       doc.font("Helvetica-Oblique").text(exp.duration);
-  //       const points = cleanBulletPoints(exp.description || "");
-  //       doc.fontSize(9).font("Helvetica").list(points, { bulletIndent: 15 });
-  //       doc.moveDown(0.5);
-  //     });
-  //   }
   const validExperience = data.experience?.filter(
     (exp) =>
-      exp.company.trim() !== "" ||
-      exp.role.trim() !== "" ||
-      exp.duration.trim() !== "" ||
+      exp.company.trim() !== "" &&
+      exp.role.trim() !== "" &&
+      exp.duration.trim() !== "" &&
       exp.description.trim() !== ""
   );
 
@@ -159,7 +169,12 @@ exports.createModernResume = async (data) => {
   }
 
   // Certifications
-  if (data.certifications?.length > 0) {
+
+  const validCertifications = data.certifications?.filter(
+    (cert) => cert.title.trim() !== ""
+  );
+  // if (data.certifications?.length > 0) {
+  if (validCertifications && validCertifications.length > 0) {
     drawSectionHeader("Certifications");
     data.certifications.forEach((cert) => {
       doc
@@ -170,7 +185,10 @@ exports.createModernResume = async (data) => {
   }
 
   // Projects
-  if (data.projects?.length > 0) {
+  // const validProjects = data.projects?.filter((proj) => {
+  //   proj.title.trim() !== "" && proj.description.trim() !== "";
+  // });
+  if (data.projects.length > 0) {
     drawSectionHeader("Projects");
     data.projects.forEach((proj) => {
       doc.fontSize(10).font("Helvetica-Bold").text(proj.title);

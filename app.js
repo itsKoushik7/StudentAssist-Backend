@@ -11,6 +11,7 @@ const subjectRoutes = require("./routes/subject.routes");
 const resumeRoutes = require("./routes/resumeRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const feedbackRoutes = require("./routes/feedback");
+const mockRoutes = require("./routes/mock.routes");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/subjects", subjectRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/mocks", mockRoutes);
 // app.use("/api/qa", qaRoutes);
 // router.post("/login", loginUser);
 
